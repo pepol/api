@@ -1,2 +1,2 @@
-# api
-Collection of all APIs
+# databuddy-api
+API definitions for DataBuddy

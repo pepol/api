@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package columnar.v1alpha1;
+
+service Databuddy {
+  rpc ReadRows(ReadRowsRequest) returns (ReadRowsResponse) {}
+  rpc MutateRow(MutateRowRequest) returns (MutateRowResponse) {}
+  rpc MutateRows(stream MutateRowsRequest) returns (stream MutateRowsResponse) {}
+  rpc CheckAndMutateRow(CheckAndMutateRowRequest) returns (CheckAndMutateRowResponse) {}
+}
+
+message ReadRowsRequest {
+  message RowKeys {
+    repeated string keys = 1;
+  }
+
+  message RowIntervals {
+    repeated RowInterval intervals = 1;
+  }
+
+  string table_name = 1;
+  oneof rows {
+    RowKeys row_keys = 2;
+    RowInterval row_intervals = 3;
+  }
+  RowFilter filter = 4;
+  int64 limit = 5;
+}
+
+message RowInterval {
+  oneof first {
+    string first_inclusive = 1;
+    string first_exclusive = 2;
+  }
+
+  oneof last {
+    string last_inclusive = 3;
+    string last_exclusive = 4;
+  }
+}
+
+message RowFilter {
+  message Chain {
+    repeated RowFilter filters = 1;
+  }
+
+  message Condition {
+    RowFilter predicate = 1;
+    RowFilter true_branch = 2;
+    RowFilter false_branch = 3;
+  }
+
+  oneof filter {
+    Chain chain = 1;
+    Condition condition = 2;
+    double row_sample_filter = 3;
+    string row_key_regex_filter = 4;
+  }
+}
+
+message ReadRowsResponse {
+  repeated Row rows = 1;
+  string last_scanned_key = 2;
+}
+
+message Row {
+  string row_key = 1;
+  repeated ColumnFamily families = 2;
+}
+
+message ColumnFamily {
+  string name = 1;
+  repeated Column columns = 2;
+}
+
+message Column {
+  string qualifier = 1;
+  repeated Cell cells = 2;
+}
+
+message Cell {
+  int64 timestamp_micros = 1;
+  bytes value = 2;
+} 
+
+message MutateRowRequest {}
+message MutateRowResponse {}
+
+message MutateRowsRequest {}
+message MutateRowsResponse {}
+
+message CheckAndMutateRowRequest {}
+message CheckAndMutateRowResponse {}
